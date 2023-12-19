@@ -158,16 +158,22 @@ func (m *convnet) fwd(x *G.Node) (err error) {
 
 func save(value *convnet, modelname string) error {
 	f, err := os.Create(modelname)
-	if err != nil {
-		return err
-	}
+	handlers.PanicOnError(err)
 	defer f.Close()
 	enc := gob.NewEncoder(f)
 	err = enc.Encode(value)
-	if err != nil {
-		return err
-	}
+	handlers.PanicOnError(err)
 	return nil
+}
+
+func load(modelname string) (value *convnet) {
+	value = &convnet{}
+	f, err := os.Open(modelname)
+	handlers.PanicOnError(err)
+	defer f.Close()
+	dec := gob.NewDecoder(f)
+	err = dec.Decode(value)
+	return value
 }
 
 func GenNetwork(datadir string, output string) {
@@ -207,14 +213,14 @@ func GenNetwork(datadir string, output string) {
 	// todo - check bs not 0
 
 	if err := inputs.Reshape(numExamples, 1, 28, 28); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	g := G.NewGraph()
 	x := G.NewTensor(g, dt, 4, G.WithShape(bs, 1, 28, 28), G.WithName("x"))
 	y := G.NewMatrix(g, dt, G.WithShape(bs, 10), G.WithName("y"))
 	m := newConvNet(g)
 	if err = m.fwd(x); err != nil {
-		log.Fatalf("%+v", err)
+		log.Panic("%+v", err)
 	}
 
 	// Note: the correct losses should look like that
@@ -231,7 +237,7 @@ func GenNetwork(datadir string, output string) {
 	G.Read(cost, &costVal)
 
 	if _, err = G.Grad(cost, m.learnables()...); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// debug
@@ -254,7 +260,7 @@ func GenNetwork(datadir string, output string) {
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 		profiling = true
 		pprof.StartCPUProfile(f)
@@ -308,6 +314,7 @@ func GenNetwork(datadir string, output string) {
 		log.Printf("Epoch %d | cost %v", i, costVal)
 
 	}
+
 	save(m, output)
 }
 
