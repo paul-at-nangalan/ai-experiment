@@ -88,11 +88,13 @@ func (p *NeuralNet) fwd(input *mat.Dense) {
 }
 
 func (p *NeuralNet) backLayer(from, wto, bto *mat.Dense) {
-
 }
 
-func (p *NeuralNet) back(output *mat.Dense) {
-
+func (p *NeuralNet) back(y, output *mat.Dense) {
+	networkError := new(mat.Dense)
+	networkError.Sub(y, output)
+	applySigmoidPrime := func(_, _ int, v float64) float64 { return sigmoidPrime(v) }
+	output.Apply(applySigmoidPrime, output)
 }
 
 func (p *NeuralNet) Train() {
@@ -100,8 +102,9 @@ func (p *NeuralNet) Train() {
 
 }
 
-func (p *NeuralNet) Backpropogate(x, youtput *mat.Dense) {
+func (p *NeuralNet) Backpropogate(x, y, output *mat.Dense) {
 	for i := 0; i < p.config.NumEpochs; i++ {
-		p.bHidden[0].Mul()
+		p.fwd(x)
+
 	}
 }
