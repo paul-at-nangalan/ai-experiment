@@ -1,7 +1,6 @@
 package main
 
 import (
-	"ai-experiment/preprocessor/mnist"
 	"flag"
 	"fmt"
 	"gorgonia.org/tensor"
